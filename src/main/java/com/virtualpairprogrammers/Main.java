@@ -25,11 +25,28 @@ public class Main {
 
         JavaRDD<Integer> myRdd = sc.parallelize(inputData);
 
+        // Reduce on RDD
         Integer result = myRdd.reduce(Integer::sum);
         System.out.println(result);
 
+        // Map Operations on RDD
         JavaRDD<Double> sqrtRdd = myRdd.map(Math::sqrt);
-        
+
+        // System.out::println is not serializable
+        // For multi CPU computer the code bellow will throw NotSerializableException
+        // sqrtRdd.foreach(System.out::println);
+        // to fix the issue:
+        // NB._ collect() will return a standard Java collection not an RDD
+        sqrtRdd.collect().forEach(System.out::println);
+
+        // Count the number of elements
+        System.out.println(sqrtRdd.count());
+
+        // Count the number of elements using map/reduce
+        JavaRDD<Long> singleIntegerRdd = sqrtRdd.map(value -> 1L);
+        long count = singleIntegerRdd.reduce(Long::sum);
+        System.out.println(count);
+
         sc.close();
     }
 }
