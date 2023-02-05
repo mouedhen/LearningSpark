@@ -12,23 +12,24 @@ import java.util.List;
 public class Main {
 
     public static void main(String[] args) {
-        List<Double> inputData = new ArrayList<>();
-        inputData.add(35.5);
-        inputData.add(12.499_43);
-        inputData.add(90.32);
-        inputData.add(20.32);
+        List<Integer> inputData = new ArrayList<>();
+        inputData.add(35);
+        inputData.add(12);
+        inputData.add(90);
+        inputData.add(20);
 
         Logger.getLogger("org.apache").setLevel(Level.WARN);
 
         SparkConf conf = new SparkConf().setAppName("statingSpark").setMaster("local[*]");
         JavaSparkContext sc = new JavaSparkContext(conf);
 
-        JavaRDD<Double> myRdd = sc.parallelize(inputData);
+        JavaRDD<Integer> myRdd = sc.parallelize(inputData);
 
-        Double result = myRdd.reduce((value1, value2) -> value1 + value2);
-
+        Integer result = myRdd.reduce(Integer::sum);
         System.out.println(result);
 
+        JavaRDD<Double> sqrtRdd = myRdd.map(Math::sqrt);
+        
         sc.close();
     }
 }
