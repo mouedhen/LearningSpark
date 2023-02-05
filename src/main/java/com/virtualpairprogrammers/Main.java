@@ -23,14 +23,14 @@ public class Main {
         SparkConf conf = new SparkConf().setAppName("statingSpark").setMaster("local[*]");
         JavaSparkContext sc = new JavaSparkContext(conf);
 
-        JavaRDD<Integer> myRdd = sc.parallelize(inputData);
+        JavaRDD<Integer> originalIntegers = sc.parallelize(inputData);
 
         // Reduce on RDD
-        Integer result = myRdd.reduce(Integer::sum);
-        System.out.println(result);
+        Integer result = originalIntegers.reduce(Integer::sum);
+        System.out.println("Reduce Result:" + result);
 
         // Map Operations on RDD
-        JavaRDD<Double> sqrtRdd = myRdd.map(Math::sqrt);
+        JavaRDD<Double> sqrtRdd = originalIntegers.map(Math::sqrt);
 
         // System.out::println is not serializable
         // For multi CPU computer the code bellow will throw NotSerializableException
@@ -40,12 +40,15 @@ public class Main {
         sqrtRdd.collect().forEach(System.out::println);
 
         // Count the number of elements
-        System.out.println(sqrtRdd.count());
+        System.out.println("count():" + sqrtRdd.count());
 
         // Count the number of elements using map/reduce
         JavaRDD<Long> singleIntegerRdd = sqrtRdd.map(value -> 1L);
         long count = singleIntegerRdd.reduce(Long::sum);
-        System.out.println(count);
+        System.out.println("Count Result:" + count);
+
+        JavaRDD<IntegerWithSquareRoot> iwsRdd = originalIntegers.map(IntegerWithSquareRoot::new);
+        iwsRdd.collect().forEach(System.out::println);
 
         sc.close();
     }
