@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Main {
+
     public static void main(String[] args) {
         List<Double> inputData = new ArrayList<>();
         inputData.add(35.5);
@@ -23,6 +24,10 @@ public class Main {
         JavaSparkContext sc = new JavaSparkContext(conf);
 
         JavaRDD<Double> myRdd = sc.parallelize(inputData);
+
+        Double result = myRdd.reduce((value1, value2) -> value1 + value2);
+
+        System.out.println(result);
 
         sc.close();
     }
