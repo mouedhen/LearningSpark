@@ -5,6 +5,7 @@ import org.apache.log4j.Logger;
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
+import scala.Tuple2;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -47,8 +48,13 @@ public class Main {
         long count = singleIntegerRdd.reduce(Long::sum);
         System.out.println("Count Result:" + count);
 
+        // RDDs of Objects
         JavaRDD<IntegerWithSquareRoot> iwsRdd = originalIntegers.map(IntegerWithSquareRoot::new);
         iwsRdd.collect().forEach(System.out::println);
+
+        // Tuples and RDDs
+        JavaRDD<Tuple2<Integer, Double>> tuple2Rdd = originalIntegers.map(x -> new Tuple2<>(x, Math.sqrt(x)));
+        tuple2Rdd.collect().forEach(System.out::println);
 
         sc.close();
     }
