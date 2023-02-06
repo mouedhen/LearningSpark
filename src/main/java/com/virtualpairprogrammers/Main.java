@@ -3,6 +3,7 @@ package com.virtualpairprogrammers;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.apache.spark.SparkConf;
+import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import scala.Tuple2;
@@ -13,48 +14,29 @@ import java.util.List;
 public class Main {
 
     public static void main(String[] args) {
-        List<Integer> inputData = new ArrayList<>();
-        inputData.add(35);
-        inputData.add(12);
-        inputData.add(90);
-        inputData.add(20);
+        List<String> inputData = new ArrayList<>();
+        inputData.add("WARN: Tuesday 4 September 0405");
+        inputData.add("ERROR: Tuesday 4 September 0408");
+        inputData.add("FATAL: Wednesday 5 September 1632");
+        inputData.add("ERROR: Friday 7 September 1854");
+        inputData.add("WARN: Saturday 8 September 1942");
 
         Logger.getLogger("org.apache").setLevel(Level.WARN);
 
         SparkConf conf = new SparkConf().setAppName("statingSpark").setMaster("local[*]");
         JavaSparkContext sc = new JavaSparkContext(conf);
 
-        JavaRDD<Integer> originalIntegers = sc.parallelize(inputData);
+        JavaRDD<String> originalLogMessages = sc.parallelize(inputData);
 
-        // Reduce on RDD
-        Integer result = originalIntegers.reduce(Integer::sum);
-        System.out.println("Reduce Result:" + result);
+        JavaPairRDD<String, String> pairRDD = originalLogMessages.mapToPair(rawValue -> {
+            String[] columns = rawValue.split(":");
+            String level = columns[0];
+            String date = columns[1];
 
-        // Map Operations on RDD
-        JavaRDD<Double> sqrtRdd = originalIntegers.map(Math::sqrt);
+            return new Tuple2<>(level, date);
+        });
 
-        // System.out::println is not serializable
-        // For multi CPU computer the code bellow will throw NotSerializableException
-        // sqrtRdd.foreach(System.out::println);
-        // to fix the issue:
-        // NB._ collect() will return a standard Java collection not an RDD
-        sqrtRdd.collect().forEach(System.out::println);
-
-        // Count the number of elements
-        System.out.println("count():" + sqrtRdd.count());
-
-        // Count the number of elements using map/reduce
-        JavaRDD<Long> singleIntegerRdd = sqrtRdd.map(value -> 1L);
-        long count = singleIntegerRdd.reduce(Long::sum);
-        System.out.println("Count Result:" + count);
-
-        // RDDs of Objects
-        JavaRDD<IntegerWithSquareRoot> iwsRdd = originalIntegers.map(IntegerWithSquareRoot::new);
-        iwsRdd.collect().forEach(System.out::println);
-
-        // Tuples and RDDs
-        JavaRDD<Tuple2<Integer, Double>> tuple2Rdd = originalIntegers.map(x -> new Tuple2<>(x, Math.sqrt(x)));
-        tuple2Rdd.collect().forEach(System.out::println);
+        pairRDD.collect().forEach(tuple -> System.out.println("Key: " + tuple._1 + " | Value: " + tuple._2));
 
         sc.close();
     }
