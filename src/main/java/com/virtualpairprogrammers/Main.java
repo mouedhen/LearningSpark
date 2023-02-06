@@ -28,15 +28,16 @@ public class Main {
 
         JavaRDD<String> originalLogMessages = sc.parallelize(inputData);
 
-        JavaPairRDD<String, String> pairRDD = originalLogMessages.mapToPair(rawValue -> {
+        JavaPairRDD<String, Long> pairRDD = originalLogMessages.mapToPair(rawValue -> {
             String[] columns = rawValue.split(":");
             String level = columns[0];
-            String date = columns[1];
 
-            return new Tuple2<>(level, date);
+            return new Tuple2<>(level, 1L);
         });
+        pairRDD.collect().forEach(tuple -> System.out.println("Level: " + tuple._1 + " | Date: " + tuple._2));
 
-        pairRDD.collect().forEach(tuple -> System.out.println("Key: " + tuple._1 + " | Value: " + tuple._2));
+        JavaPairRDD<String, Long> sumRdd = pairRDD.reduceByKey(Long::sum);
+        sumRdd.collect().forEach(tuple -> System.out.println("Level: " + tuple._1 + " | Count: " + tuple._2));
 
         sc.close();
     }
